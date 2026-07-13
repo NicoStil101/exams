@@ -1,0 +1,13 @@
+# Python
+__pycache__/
+*.pyc
+venv/
+
+# Local personal data -- never push your own progress/study log
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# OS cruft
+.DS_Store

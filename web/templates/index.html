@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="top-links">
+      <div class="top-links-nav">
+        <a class="back-link" href="{{ url_for('progress_page') }}">Progress</a>
+        <a class="back-link" href="{{ url_for('study_log_page') }}">Study log</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <header class="page-header">
+      <h1>Exam Prep</h1>
+      <p class="subtitle">Randomized practice exercises with deterministic, worked solutions.</p>
+    </header>
+
+    <div class="category-grid">
+      {% for key, cat in categories.items() %}
+      <section class="category-card">
+        <h2>{{ cat.label }}</h2>
+        {% if cat.exercises %}
+          <ul class="exercise-list">
+            {% for ex_id, ex in cat.exercises.items() %}
+            <li><a href="{{ url_for('exercise_page', exercise_id=ex_id) }}">{{ ex.label }}</a></li>
+            {% endfor %}
+          </ul>
+        {% else %}
+          <p class="coming-soon">Coming soon</p>
+        {% endif %}
+      </section>
+      {% endfor %}
+    </div>
+  </div>
+
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

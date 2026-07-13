@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>{{ title }} — Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.css">
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/katex.min.js"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.11/dist/contrib/auto-render.min.js"></script>
+</head>
+<body>
+  <div class="page">
+    <div class="top-links">
+      <span>
+        <a class="back-link" href="{{ url_for('index') }}">&larr; all categories</a>
+        &nbsp;&nbsp;
+        <a class="back-link" href="{{ url_for('progress_page') }}">view progress &rarr;</a>
+      </span>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <header class="page-header">
+      <h1>{{ title }}</h1>
+    </header>
+
+    <div class="controls">
+      <button id="new-btn">New Random Exercise</button>
+      <button id="solution-btn" disabled>Show Solution</button>
+      <span id="seed-label" class="seed-label"></span>
+    </div>
+
+    <section id="problem-box" class="problem-box">Loading…</section>
+    <div id="diagram-box" class="diagram-box"></div>
+
+    <div id="check-answer-box" class="check-answer-box hidden">
+      <div id="check-table-wrap"></div>
+      <div id="check-answer-rows"></div>
+      <button id="check-answer-btn">Check</button>
+      <div id="check-answer-feedback" class="check-feedback"></div>
+    </div>
+
+    <section id="solution-box" class="solution-box hidden">
+      <div id="solution-steps"></div>
+      <div id="answer-box" class="answer-box hidden">
+        <div class="answer-label">Answer</div>
+        <div id="answer-content"></div>
+      </div>
+    </section>
+  </div>
+
+  <script defer src="{{ url_for('static', filename='exercise.js') }}" data-exercise-id="{{ exercise_id }}"></script>
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

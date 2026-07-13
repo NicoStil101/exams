@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>Study Log — Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page page-wide">
+    <div class="top-links">
+      <div class="top-links-nav">
+        <a class="back-link" href="{{ url_for('index') }}">&larr; all categories</a>
+        <a class="back-link" href="{{ url_for('progress_page') }}">Progress</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <header class="page-header">
+      <h1>Study Log</h1>
+      <p class="subtitle">
+        A retrospective revision timetable: log what you studied after each session instead of
+        planning ahead of time &mdash; the calendar fills in as you go, so coverage gaps become
+        obvious at a glance.
+      </p>
+    </header>
+
+    <div class="log-legend">
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--status-bad)"></span> Red &mdash; weak, revisit soon</span>
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--status-warn)"></span> Yellow &mdash; getting there</span>
+      <span class="legend-item"><span class="legend-swatch" style="background: var(--status-good)"></span> Green &mdash; confident</span>
+      <span class="legend-item">&#127891; Exam date</span>
+    </div>
+
+    <div class="log-layout">
+      <section class="log-calendar">
+        <div class="log-cal-nav">
+          <button id="log-prev" class="log-nav-btn" type="button" aria-label="Previous month">&larr;</button>
+          <h2 id="log-month-label"></h2>
+          <button id="log-next" class="log-nav-btn" type="button" aria-label="Next month">&rarr;</button>
+          <button id="log-today" class="log-nav-btn log-today-btn" type="button">Today</button>
+        </div>
+        <div class="log-weekdays">
+          <span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span>
+        </div>
+        <div id="log-grid" class="log-grid"></div>
+      </section>
+
+      <section class="log-day-panel">
+        <h2 id="log-day-heading">&nbsp;</h2>
+
+        <div id="log-day-exams"></div>
+        <div id="log-day-entries" class="log-day-entries"></div>
+
+        <h3 class="log-panel-heading">Log a study session</h3>
+        <form id="log-add-form" class="log-add-form">
+          <label>
+            Subject
+            <input id="log-subject" list="log-subject-options" placeholder="e.g. Operating Systems" required autocomplete="off">
+            <datalist id="log-subject-options"></datalist>
+          </label>
+          <label>
+            Topic / exercise
+            <input id="log-topic" placeholder="e.g. Banker's Algorithm" required autocomplete="off">
+          </label>
+          <label>
+            Confidence
+            <div id="log-assess-group" class="log-assess-group" role="radiogroup" aria-label="Confidence">
+              <button type="button" class="log-assess-btn log-assess-red" data-value="red">Red</button>
+              <button type="button" class="log-assess-btn log-assess-yellow active" data-value="yellow">Yellow</button>
+              <button type="button" class="log-assess-btn log-assess-green" data-value="green">Green</button>
+            </div>
+          </label>
+          <label>
+            Notes <span class="log-optional">(optional)</span>
+            <textarea id="log-notes" rows="2"></textarea>
+          </label>
+          <button type="submit">Add entry</button>
+        </form>
+
+        <h3 class="log-panel-heading">Mark exam date</h3>
+        <form id="log-exam-form" class="log-exam-form">
+          <input id="log-exam-subject" list="log-subject-options" placeholder="Subject (optional)" autocomplete="off">
+          <input id="log-exam-label" placeholder="e.g. Midterm, Final (optional)" autocomplete="off">
+          <button type="submit">Mark as exam date</button>
+        </form>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='study_log.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

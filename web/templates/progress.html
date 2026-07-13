@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>Progress — Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page">
+    <div class="top-links">
+      <div class="top-links-nav">
+        <a class="back-link" href="{{ url_for('index') }}">&larr; all categories</a>
+        <a class="back-link" href="{{ url_for('study_log_page') }}">Study log</a>
+      </div>
+      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+    </div>
+    <header class="page-header">
+      <h1>Progress</h1>
+      <p class="subtitle">Right vs. wrong submissions per exercise.</p>
+    </header>
+
+    <div class="progress-legend">
+      <span class="legend-item"><span class="legend-swatch correct"></span> Correct</span>
+      <span class="legend-item"><span class="legend-swatch wrong"></span> Wrong</span>
+    </div>
+
+    <section class="progress-section">
+      <h2 class="section-heading">Total Submissions</h2>
+      <p class="section-subtitle">All exercises, ranked by total attempts.</p>
+      <div id="totals-chart">Loading…</div>
+    </section>
+
+    <section class="progress-section">
+      <h2 class="section-heading">By Category</h2>
+      <div id="progress-list">Loading…</div>
+    </section>
+  </div>
+
+  <script src="{{ url_for('static', filename='progress.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+<script>
+(function () {
+  var STORAGE_KEY = 'exam-prep-theme';
+  var stored = localStorage.getItem(STORAGE_KEY);
+  var theme = (stored === 'dark' || stored === 'light')
+    ? stored
+    : (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+  document.documentElement.setAttribute('data-theme', theme);
+  document.documentElement.style.colorScheme = theme;
+})();
+</script>
