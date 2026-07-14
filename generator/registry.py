@@ -13,7 +13,7 @@ from operating_system import page_table_translation
 from operating_system import page_table_entries
 from operating_system import petri_net_reachability
 from linear_algebra import eigenvalues_3x3
-from algorithms import heapsort, red_black_tree, mst_weight
+from algorithms import heapsort, red_black_tree, mst_weight, dijkstra, bellman_ford
 
 CATEGORIES: dict[str, dict] = {
     "operating-system": {
@@ -59,6 +59,14 @@ CATEGORIES: dict[str, dict] = {
             mst_weight.EXERCISE_ID: {
                 "label": mst_weight.TITLE,
                 "module": mst_weight,
+            },
+            dijkstra.EXERCISE_ID: {
+                "label": dijkstra.TITLE,
+                "module": dijkstra,
+            },
+            bellman_ford.EXERCISE_ID: {
+                "label": bellman_ford.TITLE,
+                "module": bellman_ford,
             },
         },
     },
