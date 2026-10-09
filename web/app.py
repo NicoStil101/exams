@@ -1,14 +1,17 @@
 from __future__ import annotations
 
 import sys
-from datetime import datetime
+from datetime import date, datetime
 from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "generator"))
 
 from flask import Flask, abort, jsonify, render_template, request  # noqa: E402
 
+import bst_visualizer_state  # noqa: E402
+import heap_visualizer_state  # noqa: E402
 import progress_db  # noqa: E402
+import rb_visualizer_state  # noqa: E402
 import registry  # noqa: E402
 import study_log_db  # noqa: E402
 
@@ -29,12 +32,41 @@ def _exercise_to_dict(ex) -> dict:
         "final_answer": ex.final_answer,
         "check_answers": ex.check_answers,
         "check_table": ex.check_table,
+        "check_grids": getattr(ex, "check_grids", []),
     }
+
+
+def _current_semester(today: date | None = None) -> str:
+    """Oct-Mar is the winter semester named after its starting year, Apr-Sep summer."""
+    today = today or date.today()
+    if today.month >= 10:
+        return f"{today.year % 100:02d}w"
+    if today.month <= 3:
+        return f"{(today.year - 1) % 100:02d}w"
+    return f"{today.year % 100:02d}s"
 
 
 @app.route("/")
 def index():
-    return render_template("index.html", categories=registry.CATEGORIES)
+    semesters = sorted(
+        {cat["semester"] for cat in registry.CATEGORIES.values()} | {_current_semester()},
+        key=registry.semester_sort_key,
+        reverse=True,
+    )
+    return render_template(
+        "index.html",
+        categories=registry.CATEGORIES,
+        semesters=semesters,
+        default_semester=_current_semester(),
+    )
+
+
+@app.route("/subject/<category_key>")
+def subject_page(category_key):
+    category = registry.CATEGORIES.get(category_key)
+    if category is None:
+        abort(404)
+    return render_template("subject.html", category=category)
 
 
 @app.route("/exercise/<exercise_id>")
@@ -186,6 +218,114 @@ def api_exams_delete(exam_id):
     if not study_log_db.delete_exam(exam_id):
         abort(404)
     return jsonify({"status": "ok"})
+
+
+@app.route("/tools/red-black-tree")
+def rb_visualizer_page():
+    return render_template("rb_visualizer.html")
+
+
+@app.route("/api/rbtree/state")
+def api_rbtree_state():
+    return jsonify(rb_visualizer_state.get_state())
+
+
+@app.route("/api/rbtree/insert", methods=["POST"])
+def api_rbtree_insert():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(rb_visualizer_state.insert(key))
+
+
+@app.route("/api/rbtree/delete", methods=["POST"])
+def api_rbtree_delete():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(rb_visualizer_state.delete(key))
+
+
+@app.route("/api/rbtree/reset", methods=["POST"])
+def api_rbtree_reset():
+    return jsonify(rb_visualizer_state.reset())
+
+
+@app.route("/api/rbtree/bulk", methods=["POST"])
+def api_rbtree_bulk():
+    data = request.get_json(force=True, silent=True) or {}
+    text = data.get("text", "")
+    if not isinstance(text, str):
+        abort(400)
+    return jsonify(rb_visualizer_state.bulk_load(text))
+
+
+@app.route("/tools/bst")
+def bst_visualizer_page():
+    return render_template("bst_visualizer.html")
+
+
+@app.route("/api/bst/state")
+def api_bst_state():
+    return jsonify(bst_visualizer_state.get_state())
+
+
+@app.route("/api/bst/insert", methods=["POST"])
+def api_bst_insert():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(bst_visualizer_state.insert(key))
+
+
+@app.route("/api/bst/delete", methods=["POST"])
+def api_bst_delete():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(bst_visualizer_state.delete(key))
+
+
+@app.route("/api/bst/reset", methods=["POST"])
+def api_bst_reset():
+    return jsonify(bst_visualizer_state.reset())
+
+
+@app.route("/tools/heap")
+def heap_visualizer_page():
+    return render_template("heap_visualizer.html")
+
+
+@app.route("/api/heap/state")
+def api_heap_state():
+    return jsonify(heap_visualizer_state.get_state())
+
+
+@app.route("/api/heap/insert", methods=["POST"])
+def api_heap_insert():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(heap_visualizer_state.insert(key))
+
+
+@app.route("/api/heap/delete", methods=["POST"])
+def api_heap_delete():
+    data = request.get_json(force=True, silent=True) or {}
+    key = data.get("key")
+    if not isinstance(key, int) or isinstance(key, bool):
+        abort(400)
+    return jsonify(heap_visualizer_state.delete(key))
+
+
+@app.route("/api/heap/reset", methods=["POST"])
+def api_heap_reset():
+    return jsonify(heap_visualizer_state.reset())
 
 
 if __name__ == "__main__":

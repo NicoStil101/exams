@@ -12,9 +12,14 @@
     <div class="top-links">
       <div class="top-links-nav">
         <a class="back-link" href="{{ url_for('index') }}">&larr; all categories</a>
-        <a class="back-link" href="{{ url_for('progress_page') }}">Progress</a>
+        <a class="back-link" href="{{ url_for('rb_visualizer_page') }}">RB Tree Visualizer</a>
+        <a class="back-link" href="{{ url_for('bst_visualizer_page') }}">BST Visualizer</a>
+        <a class="back-link" href="{{ url_for('heap_visualizer_page') }}">Heap Visualizer</a>
       </div>
-      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      <div class="top-actions">
+        <a class="theme-toggle icon-link" href="{{ url_for('progress_page') }}" title="Progress" aria-label="Progress">📊</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
     </div>
     <header class="page-header">
       <h1>Study Log</h1>

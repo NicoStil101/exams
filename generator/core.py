@@ -56,6 +56,12 @@ class Exercise:
     # entries are numbers (or null to leave a column blank/uncheckable for a
     # given row). `cell_hint` is optional muted text shown under the table
     # (e.g. "enter the exponent n such that #entries = 2^n").
+    check_grids: list[dict] = field(default_factory=list)
+    # each item: {"title": str, "rows": [str, ...], "slots": int,
+    #             "solution": [[0/1 per slot] per row], "hint"?: str}
+    # rendered as a clickable timeline grid (rows x time slots, e.g. a
+    # scheduling Gantt chart): clicking a cell toggles it filled; "Check"
+    # grades every cell against `solution`. Column t covers time [t, t+1).
 
     def to_json(self, **kwargs) -> str:
         d = asdict(self)

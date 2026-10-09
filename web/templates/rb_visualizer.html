@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>Red-Black Tree Visualizer — Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page page-wide">
+    <div class="top-links">
+      <div class="top-links-nav">
+        <a class="back-link" href="{{ url_for('subject_page', category_key='algorithms') }}">&larr; Algorithms</a>
+        <a class="back-link" href="{{ url_for('bst_visualizer_page') }}">BST Visualizer</a>
+        <a class="back-link" href="{{ url_for('heap_visualizer_page') }}">Heap Visualizer</a>
+      </div>
+      <div class="top-actions">
+        <a class="theme-toggle icon-link" href="{{ url_for('progress_page') }}" title="Progress" aria-label="Progress">📊</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+    <header class="page-header">
+      <h1>Red-Black Tree Visualizer</h1>
+      <p class="subtitle">
+        Insert and delete keys and watch the real CLRS insert/delete-fixup run step by step
+        &mdash; every recolor and rotation is its own frame, not just the final tree.
+      </p>
+    </header>
+
+    <div class="rbv-controls">
+      <div class="rbv-input-row">
+        <input id="rbv-key" type="number" step="1" placeholder="key, e.g. 42" aria-label="Key">
+        <button id="rbv-insert-btn">Insert</button>
+        <button id="rbv-delete-btn" class="rbv-secondary">Delete</button>
+        <button id="rbv-reset-btn" class="rbv-secondary">Reset</button>
+      </div>
+      <p id="rbv-error" class="rbv-error"></p>
+      <p id="rbv-keys" class="rbv-keys"></p>
+
+      <div class="rbv-bulk-row">
+        <textarea id="rbv-bulk-input" rows="2" placeholder="Or paste a Python array of integers, e.g. [10, 5, 15, 3, 7, 1]"></textarea>
+        <button id="rbv-bulk-btn" class="rbv-secondary">Load array</button>
+      </div>
+      <p class="rbv-bulk-hint">Starts a new tree from empty and inserts every key in order; shows only the final result, not each step.</p>
+    </div>
+
+    <div class="rbv-layout">
+      <section class="rbv-tree-panel">
+        <h2 class="log-panel-heading">Current tree</h2>
+        <div id="rbv-diagram" class="diagram-box"></div>
+      </section>
+      <section class="rbv-trace-panel">
+        <h2 class="log-panel-heading">Steps of the last operation</h2>
+        <div id="rbv-trace" class="rbv-trace"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='rb_visualizer.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

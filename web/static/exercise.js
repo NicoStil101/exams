@@ -10,6 +10,7 @@
   const answerContent = document.getElementById('answer-content');
   const seedLabel = document.getElementById('seed-label');
   const checkBox = document.getElementById('check-answer-box');
+  const checkGridsWrap = document.getElementById('check-grids-wrap');
   const checkTableWrap = document.getElementById('check-table-wrap');
   const checkRowsEl = document.getElementById('check-answer-rows');
   const checkBtn = document.getElementById('check-answer-btn');
@@ -17,6 +18,7 @@
 
   let currentCheckAnswers = [];
   let currentCheckTable = null;
+  let currentCheckGrids = [];
   let currentSeed = null;
 
   function recordAttempt(correct) {
@@ -69,8 +71,77 @@
   }
 
   function updateCheckBoxVisibility() {
-    const hasAny = currentCheckAnswers.length > 0 || !!currentCheckTable;
+    const hasAny =
+      currentCheckAnswers.length > 0 || !!currentCheckTable || currentCheckGrids.length > 0;
     checkBox.classList.toggle('hidden', !hasAny);
+  }
+
+  // Clickable timeline grids (rows x unit time slots, e.g. scheduling Gantt
+  // charts). Clicking a cell toggles it; "Check" grades each cell against
+  // grid.solution.
+  function renderCheckGrids(list) {
+    currentCheckGrids = list || [];
+    if (!currentCheckGrids.length) {
+      checkGridsWrap.innerHTML = '';
+      return;
+    }
+    checkGridsWrap.innerHTML = currentCheckGrids
+      .map((grid, gi) => {
+        const header =
+          '<tr><th class="grid-rowlabel"></th>' +
+          Array.from({ length: grid.slots }, (_, t) => '<th class="grid-time">' + t + '</th>').join('') +
+          '</tr>';
+        const body = grid.rows
+          .map((label, ri) => {
+            const cells = Array.from({ length: grid.slots }, (_, t) =>
+              '<td class="grid-cell" data-grid="' + gi + '" data-row="' + ri + '" data-col="' + t + '"></td>'
+            ).join('');
+            const pretty = /^P\d+$/.test(label)
+              ? '$' + label.replace(/^P(\d+)$/, 'P_$1') + '$'
+              : escapeHtml(label);
+            const rowClass = label === 'Scheduling' ? ' class="grid-sched-row"' : '';
+            return '<tr' + rowClass + '><th class="grid-rowlabel">' + pretty + '</th>' + cells + '</tr>';
+          })
+          .join('');
+        const hint = grid.hint
+          ? '<p class="check-table-hint">' + inlineMd(grid.hint) + '</p>'
+          : '';
+        return (
+          '<div class="check-grid">' +
+          '<div class="check-grid-title">' + inlineMd(grid.title) + '</div>' +
+          '<div class="check-table-scroll"><table class="check-grid-table"><thead>' +
+          header + '</thead><tbody>' + body + '</tbody></table></div>' +
+          hint +
+          '</div>'
+        );
+      })
+      .join('');
+  }
+
+  checkGridsWrap.addEventListener('click', (e) => {
+    const cell = e.target.closest('.grid-cell');
+    if (!cell) return;
+    cell.classList.toggle('marked');
+    cell.classList.remove('g-correct', 'g-wrong', 'g-missed');
+  });
+
+  function checkGrids() {
+    let allCorrect = true;
+    currentCheckGrids.forEach((grid, gi) => {
+      grid.solution.forEach((row, ri) => {
+        row.forEach((expected, t) => {
+          const cell = checkGridsWrap.querySelector(
+            '.grid-cell[data-grid="' + gi + '"][data-row="' + ri + '"][data-col="' + t + '"]'
+          );
+          const marked = cell.classList.contains('marked');
+          cell.classList.remove('g-correct', 'g-wrong', 'g-missed');
+          if (expected && marked) cell.classList.add('g-correct');
+          else if (!expected && marked) { cell.classList.add('g-wrong'); allCorrect = false; }
+          else if (expected && !marked) { cell.classList.add('g-missed'); allCorrect = false; }
+        });
+      });
+    });
+    return allCorrect;
   }
 
   function renderCheckAnswers(list) {
@@ -165,6 +236,11 @@
     let allCorrect = true;
     let anyChecked = false;
 
+    if (currentCheckGrids.length) {
+      anyChecked = true;
+      if (!checkGrids()) allCorrect = false;
+    }
+
     currentCheckAnswers.forEach((item, i) => {
       anyChecked = true;
       const input = checkRowsEl.querySelector('.check-input[data-index="' + i + '"]');
@@ -221,6 +297,7 @@
 
     renderCheckAnswers(ex.check_answers);
     renderCheckTable(ex.check_table);
+    renderCheckGrids(ex.check_grids);
     updateCheckBoxVisibility();
     checkFeedback.textContent = '';
     checkFeedback.classList.remove('correct', 'incorrect');

@@ -8,37 +8,84 @@
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
 </head>
 <body>
-  <div class="page">
+  <div class="page page-wide">
     <div class="top-links">
       <div class="top-links-nav">
-        <a class="back-link" href="{{ url_for('progress_page') }}">Progress</a>
         <a class="back-link" href="{{ url_for('study_log_page') }}">Study log</a>
       </div>
-      <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      <div class="top-actions">
+        <label class="semester-picker">
+          Current semester
+          <select id="current-semester" data-default="{{ default_semester }}">
+            {% for sem in semesters %}
+            <option value="{{ sem }}">{{ sem }}</option>
+            {% endfor %}
+          </select>
+        </label>
+        <a class="theme-toggle icon-link" href="{{ url_for('progress_page') }}" title="Progress" aria-label="Progress">📊</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
     </div>
     <header class="page-header">
       <h1>Exam Prep</h1>
       <p class="subtitle">Randomized practice exercises with deterministic, worked solutions.</p>
     </header>
 
-    <div class="category-grid">
-      {% for key, cat in categories.items() %}
-      <section class="category-card">
-        <h2>{{ cat.label }}</h2>
-        {% if cat.exercises %}
-          <ul class="exercise-list">
-            {% for ex_id, ex in cat.exercises.items() %}
-            <li><a href="{{ url_for('exercise_page', exercise_id=ex_id) }}">{{ ex.label }}</a></li>
-            {% endfor %}
-          </ul>
-        {% else %}
-          <p class="coming-soon">Coming soon</p>
-        {% endif %}
-      </section>
-      {% endfor %}
+    <div class="home-layout" id="home-layout">
+      <nav class="semester-sidebar" aria-label="Semesters">
+        <div class="sidebar-header">
+          <h2>Semesters</h2>
+          <button id="expand-all" class="sidebar-toggle sidebar-tree-action" aria-label="Expand all" title="Expand all">
+            <i data-lucide="chevrons-up-down"></i>
+          </button>
+          <button id="collapse-all" class="sidebar-toggle sidebar-tree-action" aria-label="Collapse all" title="Collapse all">
+            <i data-lucide="chevrons-down-up"></i>
+          </button>
+          <button id="sidebar-toggle" class="sidebar-toggle" aria-expanded="true" aria-label="Collapse sidebar" title="Collapse sidebar">
+            <i data-lucide="panel-left-close" class="when-expanded"></i>
+            <i data-lucide="panel-left-open" class="when-collapsed"></i>
+          </button>
+        </div>
+        <ul class="sidebar-body">
+          {% for sem in semesters %}
+          <li class="semester-node" data-semester="{{ sem }}">
+            <div class="semester-row">
+              <button class="semester-chevron" aria-expanded="false" aria-label="Expand {{ sem }}">
+                <i data-lucide="chevron-right"></i>
+              </button>
+              <button class="semester-link" data-semester="{{ sem }}">
+                <span><i data-lucide="folder" class="icon-sm folder-closed"></i><i data-lucide="folder-open" class="icon-sm folder-open"></i>{{ sem }}</span>
+                <span class="semester-current-tag">current</span>
+              </button>
+            </div>
+            <ul class="semester-subjects">
+              {% for key, cat in categories.items() if cat.semester == sem %}
+              <li><a href="{{ url_for('subject_page', category_key=key) }}"><i data-lucide="{{ cat.icon }}" class="icon-sm"></i>{{ cat.label }}</a></li>
+              {% endfor %}
+            </ul>
+          </li>
+          {% endfor %}        </ul>
+      </nav>
+
+      <main>
+        <h2 id="semester-heading" class="semester-heading"></h2>
+        <div class="category-grid subject-grid">
+          {% for key, cat in categories.items() %}
+          <a class="category-card subject-card" href="{{ url_for('subject_page', category_key=key) }}" data-semester="{{ cat.semester }}">
+            <i data-lucide="{{ cat.icon }}" class="subject-icon"></i>
+            <h2>{{ cat.label }}</h2>
+            <p class="subject-meta">{{ cat.semester }} · {{ cat.exercises|length }} exercise{{ '' if cat.exercises|length == 1 else 's' }}{% if cat.tools %} · {{ cat.tools|length }} tool{{ '' if cat.tools|length == 1 else 's' }}{% endif %}</p>
+          </a>
+          {% endfor %}
+        </div>
+        <p id="no-subjects" class="coming-soon" hidden>No subjects for this semester yet.</p>
+      </main>
     </div>
   </div>
 
   <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='semester.js') }}"></script>
+  <script defer src="https://cdn.jsdelivr.net/npm/lucide@0.469.0/dist/umd/lucide.min.js"></script>
+  <script>document.addEventListener("DOMContentLoaded", function () { lucide.createIcons(); });</script>
 </body>
 </html>

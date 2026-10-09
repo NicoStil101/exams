@@ -20,6 +20,7 @@ class TNode:
     stroke: str = "var(--diagram-ink, #111)"
     text_color: str = "var(--diagram-ink, #111)"
     highlight: bool = False
+    dashed: bool = False
 
 
 def _inorder_positions(nodes: dict[str, TNode], root_id: str | None) -> dict[str, tuple[int, int]]:
@@ -83,9 +84,10 @@ def render_tree_svg(
     for nid, node in nodes.items():
         cx, cy = px(nid)
         sw = 3.2 if node.highlight else 1.6
+        dash = ' stroke-dasharray="4,3"' if node.dashed else ""
         parts.append(
             f'<circle cx="{cx}" cy="{cy}" r="{node_r}" fill="{node.fill}" '
-            f'stroke="{node.stroke}" stroke-width="{sw}" />'
+            f'stroke="{node.stroke}" stroke-width="{sw}"{dash} />'
         )
         parts.append(
             f'<text x="{cx}" y="{cy + 5}" text-anchor="middle" fill="{node.text_color}">{node.label}</text>'

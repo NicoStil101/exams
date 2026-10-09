@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  {% include "_theme_init.html" %}
+  <title>Max-Heap Visualizer — Exam Prep</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+  <div class="page page-wide">
+    <div class="top-links">
+      <div class="top-links-nav">
+        <a class="back-link" href="{{ url_for('subject_page', category_key='algorithms') }}">&larr; Algorithms</a>
+        <a class="back-link" href="{{ url_for('rb_visualizer_page') }}">RB Tree Visualizer</a>
+        <a class="back-link" href="{{ url_for('bst_visualizer_page') }}">BST Visualizer</a>
+      </div>
+      <div class="top-actions">
+        <a class="theme-toggle icon-link" href="{{ url_for('progress_page') }}" title="Progress" aria-label="Progress">📊</a>
+        <button id="theme-toggle" class="theme-toggle" aria-label="Toggle dark mode">🌙</button>
+      </div>
+    </div>
+    <header class="page-header">
+      <h1>Max-Heap Visualizer</h1>
+      <p class="subtitle">
+        Insert and delete keys in a binary max-heap (array-based, same convention as the Heapsort
+        exercise): every parent is &ge; both its children. Insert appends and sifts up; delete
+        swaps in the last array element and sifts it up or down as needed &mdash; each swap is its
+        own step.
+      </p>
+    </header>
+
+    <div class="rbv-controls">
+      <div class="rbv-input-row">
+        <input id="heap-key" type="number" step="1" placeholder="key, e.g. 42" aria-label="Key">
+        <button id="heap-insert-btn">Insert</button>
+        <button id="heap-delete-btn" class="rbv-secondary">Delete</button>
+        <button id="heap-reset-btn" class="rbv-secondary">Reset</button>
+      </div>
+      <p id="heap-error" class="rbv-error"></p>
+      <p id="heap-keys" class="rbv-keys"></p>
+    </div>
+
+    <div class="rbv-layout">
+      <section class="rbv-tree-panel">
+        <h2 class="log-panel-heading">Current heap</h2>
+        <div id="heap-diagram" class="diagram-box"></div>
+      </section>
+      <section class="rbv-trace-panel">
+        <h2 class="log-panel-heading">Steps of the last operation</h2>
+        <div id="heap-trace" class="rbv-trace"></div>
+      </section>
+    </div>
+  </div>
+
+  <script src="{{ url_for('static', filename='heap_visualizer.js') }}"></script>
+  <script defer src="{{ url_for('static', filename='theme.js') }}"></script>
+</body>
+</html>

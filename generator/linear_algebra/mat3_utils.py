@@ -50,6 +50,38 @@ def scaled_identity3(lam: int) -> Matrix3:
     return [[lam if i == j else 0 for j in range(3)] for i in range(3)]
 
 
+def adjugate3(m: Matrix3) -> Matrix3:
+    """Adjugate (transpose of the cofactor matrix), so that
+    m @ adj(m) = adj(m) @ m = det(m) * I."""
+    cofactors = [[0] * 3 for _ in range(3)]
+    for i in range(3):
+        for j in range(3):
+            r0, r1 = (r for r in range(3) if r != i)
+            c0, c1 = (c for c in range(3) if c != j)
+            minor = m[r0][c0] * m[r1][c1] - m[r0][c1] * m[r1][c0]
+            cofactors[i][j] = (-1) ** (i + j) * minor
+    return [[cofactors[j][i] for j in range(3)] for i in range(3)]
+
+
+def inverse3_unimodular(m: Matrix3) -> Matrix3:
+    """Exact integer inverse of an integer matrix with det = +-1, via
+    m^{-1} = adj(m) / det(m)."""
+    det = det3(m)
+    if det not in (1, -1):
+        raise ValueError(f"matrix is not unimodular (det = {det})")
+    adj = adjugate3(m)
+    return [[adj[i][j] * det for j in range(3)] for i in range(3)]  # 1/det == det for det = +-1
+
+
+def columns3(vectors: list[list[int]]) -> Matrix3:
+    """Build a matrix whose columns are the given three vectors."""
+    return [[vectors[j][i] for j in range(3)] for i in range(3)]
+
+
+def column3(m: Matrix3, j: int) -> list[int]:
+    return [m[i][j] for i in range(3)]
+
+
 def matvec3(a: Matrix3, v: list[int]) -> list[int]:
     return [sum(a[i][k] * v[k] for k in range(3)) for i in range(3)]
 

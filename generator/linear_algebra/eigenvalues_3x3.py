@@ -1,5 +1,10 @@
 """Exercise: eigenvalues and eigenvectors of a 3x3 integer matrix, where all
-eigenvalues are guaranteed to satisfy 0 <= lambda < 6.
+eigenvalues are guaranteed to be integers with |lambda| <= 4.
+
+(Design note: eigenvalues were briefly even-only, but if every eigenvalue is
+even then A = P(2E)P^{-1} is even in every entry, and matrices should contain
++-1 entries — 1s are what keep Laplace expansions and row operations cheap.
+Tiny odd candidates give the best of both: p(+-1) is trivial to evaluate.)
 
 Construction: A = P D P^{-1} for a diagonal D holding 3 distinct chosen
 eigenvalues and a unimodular integer P = L @ U (unit-lower times
@@ -10,7 +15,7 @@ matrix.
 The solution does NOT just read off the hidden construction: it
 independently derives the characteristic polynomial from A's entries
 (trace, sum of principal minors, determinant), finds the roots by testing
-every candidate in the guaranteed range 0..5, and for each root computes
+every candidate in the guaranteed range -4..4, and for each root computes
 the eigenspace via exact null-space reduction (sympy) of (A - lambda I).
 Everything is a pure, deterministic function of the generated matrix.
 """
@@ -46,7 +51,47 @@ from mat3_utils import (  # noqa: E402
 EXERCISE_ID = "la-eigen-3x3"
 TITLE = "Eigenvalues and Eigenvectors of a 3x3 Matrix"
 
-_OFFDIAG_CHOICES = (-2, -1, 1, 2)
+_OFFDIAG_CHOICES = (-1, 0, 1)
+_EIGENVALUE_CHOICES = tuple(range(-4, 5))  # integers up to |lambda| = 4
+_MAX_ENTRY = 6  # small entries, mental arithmetic only
+_MAX_NEGATIVES = 3  # positive-dominant matrices: at most a third of the entries negative
+
+
+def _zero_pattern_ok(a_mat: Matrix3, min_total: int) -> bool:
+    """Zeros that help a Laplace expansion without trivialising the matrix:
+    at least `min_total` zero entries, none of them on the main diagonal, no
+    row or column holding more than one, and one *further* zero must be
+    obtainable by a single row operation R_i <- R_i -+ R_k (i.e. two rows
+    agree up to sign somewhere)."""
+    n = len(a_mat)
+    if any(a_mat[i][i] == 0 for i in range(n)):
+        return False
+    row_zeros = [sum(1 for v in row if v == 0) for row in a_mat]
+    col_zeros = [sum(1 for row in a_mat if row[j] == 0) for j in range(n)]
+    if sum(row_zeros) < min_total or max(row_zeros) > 1 or max(col_zeros) > 1:
+        return False
+    return any(
+        a_mat[i][j] != 0 and a_mat[i][j] in (a_mat[k][j], -a_mat[k][j])
+        for i in range(n)
+        for k in range(n)
+        if i != k
+        for j in range(n)
+    )
+
+
+def _no_duplicate_lines(a_mat: Matrix3) -> bool:
+    """Reject matrices with two rows or two columns equal up to sign — those
+    make the determinant/rank visible at a glance."""
+    n = len(a_mat)
+    for i in range(n):
+        for k in range(i + 1, n):
+            if a_mat[i] == a_mat[k] or a_mat[i] == [-v for v in a_mat[k]]:
+                return False
+            col_i = [a_mat[r][i] for r in range(n)]
+            col_k = [a_mat[r][k] for r in range(n)]
+            if col_i == col_k or col_i == [-v for v in col_k]:
+                return False
+    return True
 
 
 def _invert_unit_lower(l: Matrix3) -> Matrix3:
@@ -82,15 +127,36 @@ def generate(seed: int | None = None) -> Exercise:
         seed = new_seed(rng)
         rng = random.Random(seed)
 
-    eigenvalues = sorted(rng.sample(range(6), 3))
+    # Redraw until A is genuinely hand-computable: small entries, a helpful
+    # (but not excessive) zero pattern for the Laplace expansion of
+    # det(A - lambda I), and not triangular, so the eigenvalues cannot be
+    # read straight off the diagonal.
+    while True:
+        eigenvalues = sorted(rng.sample(_EIGENVALUE_CHOICES, 3))
 
-    a, b, c, d, e, f = (rng.choice(_OFFDIAG_CHOICES) for _ in range(6))
-    lower = [[1, 0, 0], [a, 1, 0], [b, c, 1]]
-    upper = [[1, d, e], [0, 1, f], [0, 0, 1]]
-    p = matmul3(lower, upper)
-    p_inv = matmul3(_invert_unit_upper(upper), _invert_unit_lower(lower))
+        a, b, c, d, e, f = (rng.choice(_OFFDIAG_CHOICES) for _ in range(6))
+        lower = [[1, 0, 0], [a, 1, 0], [b, c, 1]]
+        upper = [[1, d, e], [0, 1, f], [0, 0, 1]]
+        p = matmul3(lower, upper)
+        p_inv = matmul3(_invert_unit_upper(upper), _invert_unit_lower(lower))
 
-    a_mat = matmul3(matmul3(p, diag3(eigenvalues)), p_inv)
+        a_mat = matmul3(matmul3(p, diag3(eigenvalues)), p_inv)
+
+        if max(abs(v) for row in a_mat for v in row) > _MAX_ENTRY:
+            continue
+        if sum(1 for row in a_mat for v in row if v < 0) > _MAX_NEGATIVES:
+            continue
+        if not _zero_pattern_ok(a_mat, 1):
+            continue
+        if not any(abs(v) == 1 for row in a_mat for v in row):
+            continue  # a +-1 entry keeps expansions and row operations cheap
+        if not _no_duplicate_lines(a_mat):
+            continue
+        is_upper = all(a_mat[i][j] == 0 for i in range(3) for j in range(3) if i > j)
+        is_lower = all(a_mat[i][j] == 0 for i in range(3) for j in range(3) if i < j)
+        if is_upper or is_lower:
+            continue
+        break
 
     tr = trace3(a_mat)
     c2 = principal_minor_sum3(a_mat)
@@ -99,14 +165,15 @@ def generate(seed: int | None = None) -> Exercise:
     def char_poly(lam: int) -> int:
         return lam**3 - tr * lam**2 + c2 * lam - det
 
-    found_roots = [lam for lam in range(6) if char_poly(lam) == 0]
+    found_roots = [lam for lam in _EIGENVALUE_CHOICES if char_poly(lam) == 0]
     eigenvectors = {lam: _integer_eigenvector(a_mat, lam) for lam in found_roots}
 
     prompt = (
         f"Consider the matrix\n\n$$A = {to_latex_bmatrix(a_mat)}$$\n\n"
-        f"All eigenvalues of $A$ are known to satisfy $0 \\le \\lambda < 6$. "
+        f"All eigenvalues of $A$ are known to be integers with $|\\lambda| \\le 4$. "
         f"Find all eigenvalues of $A$, and for each eigenvalue find a corresponding "
-        f"eigenvector."
+        f"eigenvector. Scale each eigenvector to coprime integers with a positive first "
+        f"nonzero entry."
     )
 
     steps = [
@@ -126,8 +193,11 @@ def generate(seed: int | None = None) -> Exercise:
         Step(
             "So the characteristic equation is "
             f"$\\lambda^3 - ({tr})\\lambda^2 + ({c2})\\lambda - ({det}) = 0$. "
-            "Since $0 \\le \\lambda < 6$, only $\\lambda = 0,1,2,3,4,5$ need to be tested: "
-            "$" + ",\\;".join(f"p({lam})={char_poly(lam)}" for lam in range(6)) + "$."
+            "Since the eigenvalues are integers with $|\\lambda| \\le 4$, only "
+            "$\\lambda = -4, -3, \\dots, 4$ need to be tested: "
+            "$"
+            + ",\\;".join(f"p({lam})={char_poly(lam)}" for lam in _EIGENVALUE_CHOICES)
+            + "$."
         ),
         Step(
             "The polynomial vanishes exactly at $\\lambda = "
@@ -160,6 +230,31 @@ def generate(seed: int | None = None) -> Exercise:
         "eigenvectors": {lam: eigenvectors[lam] for lam in found_roots},
     }
 
+    ordinals = ("smallest", "middle", "largest")
+    # The eigenvalues are asked for separately, so the eigenvector rows are
+    # labelled by rank rather than by value — otherwise the table would give
+    # the first part of the answer away.
+    check_answers = [
+        {
+            "label": f"$\\lambda_{i + 1}$ ({ordinals[i]} eigenvalue)",
+            "value": root,
+            "type": "number",
+        }
+        for i, root in enumerate(found_roots)
+    ]
+    check_table = {
+        "col_headers": ["entry 1", "entry 2", "entry 3"],
+        "cell_hint": "one eigenvector per row, scaled to coprime integers with a positive "
+        "first nonzero entry",
+        "rows": [
+            {
+                "label": f"eigenvector for the {ordinals[i]} eigenvalue",
+                "cells": list(eigenvectors[root]),
+            }
+            for i, root in enumerate(found_roots)
+        ],
+    }
+
     return Exercise(
         id=EXERCISE_ID,
         seed=seed,
@@ -168,6 +263,8 @@ def generate(seed: int | None = None) -> Exercise:
         steps=steps,
         answers=answers,
         final_answer=final_answer,
+        check_answers=check_answers,
+        check_table=check_table,
     )
 
 
